@@ -1,0 +1,17 @@
+# venv
+venv/
+.venv/
+
+# python cache
+__pycache__/
+*.pyc
+
+# secrets
+.env
+
+# vscode
+.vscode/
+
+# data files (so you don't hit GitHub size limits)
+*.csv
+*.xlsx
