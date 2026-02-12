@@ -16,7 +16,7 @@ class RegressionNet(nn.Module):
         self.layers = nn.Sequential(  
             nn.Linear(1, 16), #1,16: input sample size: 1 - output sample size: 16
             nn.ReLU(),
-            nn.Linear(16, 1)
+            nn.Linear(16, 1)   # too small (second order function)
         )
 
     def forward(self, x):
@@ -31,9 +31,11 @@ class SVGD:
         mask = torch.triu(torch.ones(N, N), diagonal=1).bool()
         if mask.sum() == 0: return 1.0
         
-        med_sq = torch.median(dist_sq[mask])
+        med_sq = torch.median(dist_sq[mask])  # you don't have to get upper triangular mask for this. Median of distances is fine
         scaling_factor = torch.log(torch.tensor(N).float())
         if scaling_factor == 0: scaling_factor = 1.0
+
+        # double check but I am sure median heuristic requires 2.0 * log(N) # would double check RBF median heuristic kernel
         
         return torch.sqrt(med_sq / scaling_factor).item()
 
@@ -44,9 +46,9 @@ class SVGD:
         X_j = X.unsqueeze(0)
         dist_sq = torch.sum((X_i - X_j)**2, dim=2)
         
-        K = torch.exp(-dist_sq / (2.0 * sigma**2))
+        K = torch.exp(-dist_sq / (2.0 * sigma**2))  # above comment most likely because of the second factor
         X_diff = X_j - X_i
-        grad_K_i = K.unsqueeze(2) * X_diff / (sigma**2)
+        grad_K_i = K.unsqueeze(2) * X_diff / (sigma**2) # e^(-d/(2s^2)) # 2*s^2 not just s^2 [might be wrong]
         sum_grad_K = torch.sum(grad_K_i, dim=1)
         
         return K.detach(), sum_grad_K.detach()
